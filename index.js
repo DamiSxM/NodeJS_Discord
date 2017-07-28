@@ -13,23 +13,26 @@ let responseBot;
 bot.on('message', (message) => {
 	if (message.author.id != bot.user.id)
 	{
-		console.log("\n");
-		console.log(message.author.username+' : '+message.content);
-		messageUser = message;
+		if(message.mentions.users.exists('id', bot.user.id)){
 
-		var request = ai.textRequest(message.content, {sessionId: message.author.id});
-		request.on('response', function(response) {
+			console.log("\n");
+			console.log(message.author.username+' : '+message.content);
+			messageUser = message;
 
-			responseBot = response['result']['fulfillment']['speech'];
-			action(response['result']['action'],response['result']['parameters']);
+			var request = ai.textRequest(message.content, {sessionId: message.author.id/*Math.random()*/});
+			request.on('response', function(response) {
 
-			//if (reaction) message.channel.send(response['result']['fulfillment']['speech']);
-			console.log('intention : '+response['result']['metadata']['intentName']);
-		});
-		request.on('error', function(error) {
-		    console.log(error);
-		});
-		request.end();
+				responseBot = response['result']['fulfillment']['speech'];
+				action(response['result']['action'],response['result']['parameters']);
+
+				//if (reaction) message.channel.send(response['result']['fulfillment']['speech']);
+				console.log('intention : '+response['result']['metadata']['intentName']);
+			});
+			request.on('error', function(error) {
+			    console.log(error);
+			});
+			request.end();
+		}
 	}
 });
 
@@ -40,13 +43,13 @@ bot.on('ready', function(){
 function action(action, parameters){
 	console.log('action : '+action);
 	switch (action) {
-		case 'addCustomer': AddCustomer(parameters['given-name'], parameters['last-name']);
+		case 'addCustomer': AddCustomer(parameters['firstName'], parameters['lastName']);
 		break;
 		case 'ListCustomers': ListCustomers();
 		break;
-		case 'DeleteCustomer': 
+		case 'DeleteCustomer': DeleteCustomer(parameters['firstName'], parameters['lastName']);
 		break;
-		default: messageUser.channel.send(responseBot);
+		default: /*messageUser.channel.send(responseBot);*/  messageUser.reply(responseBot);
 		break;
 	}
 }
@@ -64,11 +67,11 @@ function AddCustomer(firstN, lastN){
 				console.log("1 record inserted : "+firstN+' '+lastN);
 				db.close();
 
-				messageUser.channel.send(responseBot);
 
 			});
 		});
 	}
+				messageUser.channel.send(responseBot);
 }
 
 function ListCustomers(){
